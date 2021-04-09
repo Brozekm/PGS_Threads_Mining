@@ -14,10 +14,15 @@ public class Headman {
 
     private CurrentLorry currentLorry;
 
-    public Headman(File inputFile, int workerCount, CurrentLorry currentLorry) throws IOException {
+    private Ferry ferry;
+
+    private BufferedWriter bw;
+
+    public Headman(File inputFile, int workerCount, CurrentLorry currentLorry, Ferry ferry, BufferedWriter bw) throws IOException {
         blocks = new LinkedList<>();
         BufferedReader br = new BufferedReader(new FileReader(inputFile.getName()));
         String line;
+        int resourcesCount = 0;
         while ((line = br.readLine()) != null) {
             line = line.toLowerCase();
 //            System.out.println(line);
@@ -25,6 +30,7 @@ public class Headman {
             for (int index = 0; index < line.length(); index++) {
                 if (line.charAt(index) == 'x') {
                     blockSize++;
+                    resourcesCount++;
                 } else if (line.charAt(index) == ' ') {
                     if (blockSize > 0) {
                         Block block = new Block(blockSize);
@@ -35,13 +41,21 @@ public class Headman {
                     throw new IOException();
                 }
             }
+            if (blockSize > 0) {
+                Block block = new Block(blockSize);
+                blocks.add(block);
+            }
         }
         this.workerCount = workerCount;
         this.currentLorry = currentLorry;
-//        System.out.println("Blocks count: " + blocks.size());
-//        for (int i = 0; i < blocks.size(); i++) {
-//            System.out.println("Number: " + i + ", size: " + blocks.get(i).getResources());
-//        }
+        this.ferry = ferry;
+        this.bw = bw;
+        System.out.println("Blocks count: " + blocks.size());
+        System.out.println("Resources count: " + resourcesCount);
+        bw.write(System.currentTimeMillis()+"-Headmen-"+Thread.currentThread().getId()+"-blocks count:"+blocks.size()+"\n");
+        bw.write(System.currentTimeMillis()+"-Headmen-"+Thread.currentThread().getId()+"-resources count:"+resourcesCount+"\n");
+        bw.flush();
+        this.ferry.setAllResources(resourcesCount);
     }
 
     public synchronized Block getBlockForWorker() {
@@ -51,12 +65,19 @@ public class Headman {
         }
         if (workerCount == 0) {
             Lorry tmpLorry = currentLorry.getLorry();
-            if (tmpLorry.getLoadedResources()>0){
+            if (tmpLorry.getLoadedResources() > 0) {
+                long lorryWaitingTime = System.currentTimeMillis() - tmpLorry.getWaitingTime();
+                try {
+                    bw.write(System.currentTimeMillis()+"-Lorry-"+Thread.currentThread().getId()+"-full after:"+ lorryWaitingTime+"\n");
+                    bw.flush();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 Thread thread = new Thread(tmpLorry);
                 thread.start();
             }
         }
-        return blocks.poll();
+        return block;
     }
 
     public Queue<Block> getBlocks() {

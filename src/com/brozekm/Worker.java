@@ -1,6 +1,7 @@
 package com.brozekm;
 
 import java.io.BufferedWriter;
+import java.io.IOException;
 import java.util.Random;
 
 public class Worker implements Runnable {
@@ -9,7 +10,7 @@ public class Worker implements Runnable {
 
     private int maxMiningTime;
 
-    private int obtainedResources;
+    private int obtainedResources = 0;
 
     private Block block;
 
@@ -29,40 +30,50 @@ public class Worker implements Runnable {
 
     @Override
     public void run() {
-        //TODO ask headman for work
         block = headman.getBlockForWorker();
 
         while (block != null) {
             Random rand = new Random();
             int sleep;
+            long blockTimeStart = System.currentTimeMillis();
             for (int i = 0; i < block.getResources(); i++) {
                 sleep = rand.nextInt(maxMiningTime) + 1;
+                long resourceTimeStart = System.currentTimeMillis();
                 try {
                     Thread.sleep(sleep);
                 } catch (InterruptedException e) {
                     System.out.println("Worker had heart attack while mining");
                 }
+                long resourceMiningTime = System.currentTimeMillis() - resourceTimeStart;
+                try {
+                    bw.write(System.currentTimeMillis() + "-Worker-" + Thread.currentThread().getId() + "-one resource mining time:" + resourceMiningTime + "\n");
+                    bw.flush();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 obtainedResources++;
             }
+            long blockMiningTime = System.currentTimeMillis() - blockTimeStart;
+            try {
+                bw.write(System.currentTimeMillis() + "-Worker-" + Thread.currentThread().getId() + "-one block mining time:" + blockMiningTime + "\n");
+                bw.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
-            for (int i = 0; i < obtainedResources; i++) {
+            for (int i = 0; i < block.getResources(); i++) {
                 Lorry tmpLorry = currentLorry.getLorry();
                 if (!tmpLorry.loadLorry()) {
                     i--;
+                    currentLorry.sendLorry();
                     continue;
                 }
-                if (tmpLorry.getCapacity() == tmpLorry.getLoadedResources()) {
-                    Thread thread = new Thread(tmpLorry);
-                    thread.start();
-                    currentLorry.setLorry(new Lorry(tmpLorry.getId() + 1,
-                            tmpLorry.getCapacity(),
-                            tmpLorry.getMaxSpeed()));
-                }
+
             }
             block = headman.getBlockForWorker();
         }
-        //TODO Print logs
-        System.out.println("Worker "+this.id+" chickened out of work and during work he obtained "+this.obtainedResources);
+
+        System.out.println("Worker " + this.id + ", mined " + this.obtainedResources + " resources");
 
     }
 

@@ -1,8 +1,10 @@
 package com.brozekm;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.util.Random;
 
-public class Lorry implements Runnable{
+public class Lorry implements Runnable {
 
     private int id;
 
@@ -12,48 +14,63 @@ public class Lorry implements Runnable{
 
     private int maxSpeed;
 
+    private Ferry ferry;
+
+    private long waitingTime;
+
+    private BufferedWriter bw;
 
 
-    public Lorry(int id, int capacity, int maxSpeed) {
+    public Lorry(int id, int capacity, int maxSpeed, Ferry ferry, BufferedWriter bw) {
         this.id = id;
         this.capacity = capacity;
         this.maxSpeed = maxSpeed;
+        this.ferry = ferry;
+        this.bw = bw;
+        waitingTime = System.currentTimeMillis();
     }
 
-    public synchronized boolean loadLorry(){
-//        while (loading){
-//            try {
-//                wait();
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
-//        }
-        if (loadedResources == capacity){
+    public synchronized boolean loadLorry() {
+        if (loadedResources == capacity) {
             return false;
         }
-//        loading = true;
         try {
-            Thread.sleep(1000);
+            Thread.sleep(100);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
         loadedResources++;
-//        loading = false;
-//        notify();
         return true;
     }
 
     @Override
     public void run() {
+        long drivingStart = System.currentTimeMillis();
         transport();
-        //TODO load ferry
+        long drivingTime = System.currentTimeMillis() - drivingStart;
+        try {
+            bw.write(System.currentTimeMillis() + "-Lorry-" + Thread.currentThread().getId() + "-arrived at ferry:" + drivingTime + "\n");
+            bw.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        ferry.loadIntoFerry(loadedResources);
+
+        drivingStart = System.currentTimeMillis();
         transport();
-        System.out.println("Lorry "+this.id+" reached its final destination");
+        drivingTime = System.currentTimeMillis() - drivingStart;
+        try {
+            bw.write(System.currentTimeMillis() + "-Lorry-" + Thread.currentThread().getId() + "-arrived at final destination:" + drivingTime + "\n");
+            bw.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    private void transport(){
+    private void transport() {
         Random rand = new Random();
-        int sleepTime = rand.nextInt(maxSpeed)+1;
+        int sleepTime = rand.nextInt(maxSpeed) + 1;
         try {
             Thread.sleep(sleepTime);
         } catch (InterruptedException e) {
@@ -61,8 +78,16 @@ public class Lorry implements Runnable{
         }
     }
 
+    public Ferry getFerry() {
+        return ferry;
+    }
+
     public int getId() {
         return id;
+    }
+
+    public long getWaitingTime() {
+        return waitingTime;
     }
 
     public int getCapacity() {
@@ -75,5 +100,9 @@ public class Lorry implements Runnable{
 
     public int getMaxSpeed() {
         return maxSpeed;
+    }
+
+    public BufferedWriter getBw() {
+        return bw;
     }
 }
