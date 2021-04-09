@@ -7,18 +7,42 @@ public class Ferry {
 
     private int capacity;
 
+    /**
+     * How many lorries are already loaded
+     */
     private int lorriesLoaded;
 
+    /**
+     * How many resources is transported during the whole simulation
+     */
     private int overallTransported;
 
+    /**
+     * Timestamp is used to determine how long ferry waited to set sail
+     */
     private long startWaiting;
 
+    /**
+     * How many resources is expected to be transported during simulation
+     */
     private int allResources = 0;
 
+    /**
+     * Boolean that shows if ferry is loaded
+     * Used in case that some thread wakes up unexpectedly
+     */
     private boolean loaded = false;
 
+    /**
+     * BufferedWriter that is used for writing log in output file
+     */
     private BufferedWriter bw;
 
+    /**
+     * Ferry constructor
+     * @param capacity Ferry capacity [lorries]
+     * @param bw instance of BufferWriter for output logs
+     */
     public Ferry(int capacity, BufferedWriter bw) {
         this.capacity = capacity;
         this.bw = bw;
@@ -27,6 +51,10 @@ public class Ferry {
         startWaiting = System.currentTimeMillis();
     }
 
+    /**
+     * Synchronized method that is loading lorries onto ferry
+     * @param load number of resources
+     */
     public synchronized void loadIntoFerry(int load) {
         lorriesLoaded++;
         overallTransported += load;

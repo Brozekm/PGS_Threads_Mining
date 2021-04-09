@@ -2,24 +2,21 @@ package com.brozekm;
 
 public class Block {
 
+    /**
+     * Number of resources in one block
+     */
     private int resources;
 
-    private boolean assigned;
-
+    /**
+     * Block with resources
+     * @param resources resoures - 'X' in file
+     */
     public Block(int resources) {
         this.resources = resources;
-        this.assigned = false;
     }
 
     public int getResources() {
         return resources;
     }
 
-    public boolean isAssigned() {
-        return assigned;
-    }
-
-    public void setAssigned(boolean assigned) {
-        this.assigned = assigned;
-    }
 }

@@ -1,9 +1,7 @@
 package com.brozekm;
 
 import java.io.*;
-import java.util.List;
 import java.util.Queue;
-import java.util.Random;
 
 public class Main {
 
@@ -49,7 +47,10 @@ public class Main {
      */
     private static int capFerry;
 
-
+    /**
+     * Main method - runs simulation
+     * @param args arguments
+     */
     public static void main(String[] args) {
         if (validateArguments(args)) {
             BufferedWriter bw;

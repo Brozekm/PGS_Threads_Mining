@@ -6,13 +6,19 @@ import java.util.Random;
 
 public class Worker implements Runnable {
 
+    /**
+     * Number of obtained resources by one worker during whole simulation
+     */
+    private int obtainedResources = 0;
+
+    /**
+     * Block with resources to mine
+     */
+    private Block block;
+
     private int id;
 
     private int maxMiningTime;
-
-    private int obtainedResources = 0;
-
-    private Block block;
 
     private CurrentLorry currentLorry;
 
@@ -20,6 +26,13 @@ public class Worker implements Runnable {
 
     private BufferedWriter bw;
 
+    /**
+     * @param id workers unique id
+     * @param maxMiningTime Maximum mining time, resource can be obtained from 1 - maxMiningTime
+     * @param currLorry instance of current lorry to which worker will load
+     * @param headman instance of headman - worker asks headman for block to mine
+     * @param bw instance of BufferWriter for output logs
+     */
     public Worker(int id, int maxMiningTime, CurrentLorry currLorry, Headman headman, BufferedWriter bw) {
         this.id = id;
         this.maxMiningTime = maxMiningTime;
@@ -28,6 +41,12 @@ public class Worker implements Runnable {
         this.bw = bw;
     }
 
+    /**
+     * In method worker repeatedly asks Headmen for block to mine resources from until there are no more blocks
+     * Time of mining block depend on number of resources that block carries
+     * After block is collected worker tries to load it onto lorry one resource at the time
+     * Multiple workers can take turns during loading process
+     */
     @Override
     public void run() {
         block = headman.getBlockForWorker();
